@@ -14,7 +14,8 @@ class ViewController: UIViewController {
     @IBOutlet var tipPercentageTextField: UITextField!
     @IBOutlet var myScrollView: UIScrollView!
     @IBOutlet var adjustTipPercentage: UISlider!
-
+    @IBOutlet var tipTextFieldAndSliderContainer: UIStackView!
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,6 +23,7 @@ class ViewController: UIViewController {
         adjustTipPercentage.minimumValue = 0
         adjustTipPercentage.maximumValue = 100
         adjustTipPercentage.value = 50
+        tipTextFieldAndSliderContainer.isHidden = true
     }
 
     @IBAction func calculateTip(_ sender: UIButton) {
@@ -29,36 +31,33 @@ class ViewController: UIViewController {
     }
     
     @IBAction func slideValueChanged(_ sender: UISlider) {
-        tipPercentageTextField.text = String(format: "%.f", sender.value)
-        guard validateIfTipHadBeenCalculated() else { return }
+        tipPercentageTextField.text = String(format: "%.f", sender.value) + "%"
         calculate()
     }
     
     @IBAction func billTextFillChanged(_ sender: UITextField) {
-        guard validateIfTipHadBeenCalculated() else { return }
+        guard tipAmountLabel.text != "" else { return }
         calculate()
     }
     
     @IBAction func tipPercentTextFieldChanged(_ sender: UITextField) {
-        guard validateIfTipHadBeenCalculated() else { return }
+        guard tipPercentageTextField.text != "" else { return }
+        adjustTipPercentage.value = Float(tipPercentageTextField.text!.replacingOccurrences(of: "%", with: ""))!
         calculate()
     }
     
-    func validateIfTipHadBeenCalculated() -> Bool {
-        if tipAmountLabel.text != "" {
-            return true
-        } else {
-            return false
-        }
-    }
-    
     func calculate(){
-        guard let amount = tipPercentageTextField.text, tipPercentageTextField.text != "" else { return }
-        adjustTipPercentage.value = Float(amount)!
-        if billAmountTextField.text != "" && tipPercentageTextField.text != "" {
-            let amount = Double(billAmountTextField.text!)! * Double(tipPercentageTextField.text!)!
-            tipAmountLabel.text = "$" + String(format: "%.f", amount / 100)
+        guard let bill = billAmountTextField.text, billAmountTextField.text != "" else { return }
+        guard var percent = tipPercentageTextField.text, tipPercentageTextField.text != "" else {
+            let defaultTip = Float(bill)! * 0.15
+            tipAmountLabel.text = "$" + String(format: "%.f",defaultTip)
+            tipTextFieldAndSliderContainer.isHidden = false
+            tipPercentageTextField.text = "15%"
+            adjustTipPercentage.value = 15
+            return
         }
+        percent = percent.replacingOccurrences(of: "%", with: "")
+        tipAmountLabel.text = "$" + String(format: "%.f", Float(bill)! * (Float(percent)! / 100))
     }
     
     func keyboardHasShown(){
